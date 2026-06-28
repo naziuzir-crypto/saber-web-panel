@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Saber Private Cloud Interface</title>
+    <style>
+        body { background-color: #0c0f12; color: #e1e7ed; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; padding-top: 80px; direction: ltr; }
+        .card { background: #14191f; padding: 40px; display: inline-block; border-radius: 12px; border: 1px solid #232d38; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width: 420px; }
+        h2 { color: #00ffcc; font-size: 24px; letter-spacing: 1px; margin-bottom: 5px; }
+        .subtitle { color: #5f758a; font-size: 12px; margin-bottom: 25px; text-transform: uppercase; }
+        .input-group { margin: 20px 0; text-align: left; }
+        label { display: block; color: #738496; font-size: 12px; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { background: #0c0f12; border: 1px solid #2c3a49; padding: 12px; width: 94%; border-radius: 6px; color: white; font-family: monospace; font-size: 14px; text-align: center; }
+        input[type="text"]:focus { border-color: #00ffcc; outline: none; }
+        button { background: #00ffcc; color: #0c0f12; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px; }
+        button:hover { background: #00ccaa; box-shadow: 0 0 15px rgba(0,255,204,0.4); }
+        .footer-text { margin-top: 25px; font-size: 11px; color: #435363; }
+        .panel-area { display: none; margin-top: 20px; }
+        .status { font-size: 20px; font-weight: bold; margin: 15px 0; }
+        .btn-toggle { background: #ff3366; color: white; }
+        .btn-toggle.active { background: #00ff88; color: #0c0f12; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>SABER NETWORK</h2>
+        <div class="subtitle">Cloud Control Panel</div>
+        <hr style="border: 0; border-top: 1px solid #232d38; margin-bottom: 20px;">
+        
+        <div id="authArea">
+            <div class="input-group">
+                <label>ENTER 16-DIGIT LICENSE KEY</label>
+                <input type="text" id="licenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required>
+            </div>
+            <button onclick="checkLicense()">ACCESS INTERFACE</button>
+        </div>
+
+        <div id="panelArea" class="panel-area">
+            <div style="color: #00ff88; font-weight: bold;">🔒 ACCESS GRANTED</div>
+            <div id="proxyStatus" class="status" style="color: #ff3366;">🔴 PROXY STOPPED</div>
+            <button id="toggleBtn" class="btn-toggle" onclick="toggleProxy()">LAUNCH PROXY</button>
+        </div>
+
+        <div class="footer-text">Protected by Saber End-to-End Encryption</div>
+    </div>
+
+    <script>
+        let securedKey = "";
+
+        function checkLicense() {
+            const key = document.getElementById('licenseKey').value.trim();
+            if (key === "0ui9-yu67-yhl7-t543") {
+                securedKey = key;
+                document.getElementById('authArea').style.display = 'none';
+                document.getElementById('panelArea').style.display = 'block';
+                // בודק את המצב הנוכחי של הפרוקסי במחשב
+                updateStatus();
+            } else {
+                alert("❌ INVALID LICENSE KEY");
+            }
+        }
+
+        function updateStatus() {
+            fetch(`http://127.0.0.1:5000/toggle?key=${securedKey}`)
+                .then(res => res.text())
+                .then(status => {
+                    const statusDiv = document.getElementById('proxyStatus');
+                    const btn = document.getElementById('toggleBtn');
+                    if (status === "ACTIVE") {
+                        statusDiv.innerHTML = "🟢 PROXY ONLINE";
+                        statusDiv.style.color = "#00ff88";
+                        btn.innerHTML = "DISCONNECT PROXY";
+                        btn.className = "btn-toggle active";
+                    } else {
+                        statusDiv.innerHTML = "🔴 PROXY STOPPED";
+                        statusDiv.style.color = "#ff3366";
+                        btn.innerHTML = "LAUNCH PROXY";
+                        btn.className = "btn-toggle";
+                    }
+                }).catch(() => {
+                    document.getElementById('proxyStatus').innerHTML = "⚠️ BACKEND OFFLINE (Run mainfet.go)";
+                    document.getElementById('proxyStatus').style.color = "#ffaa00";
+                });
+        }
+
+        function toggleProxy() {
+            fetch(`http://127.0.0.1:5000/toggle?key=${securedKey}`, { method: 'POST' })
+                .then(() => updateStatus());
+        }
+    </script>
+</body>
+</html>
